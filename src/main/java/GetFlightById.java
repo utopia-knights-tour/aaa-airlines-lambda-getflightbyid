@@ -15,9 +15,9 @@ import proxy.ApiGatewayProxyResponse;
 import proxy.ApiGatewayRequest;
 import util.ConnectUtil;
 
-public class GetFlightById implements RequestHandler<ApiGatewayRequest, Object> {
+public class GetFlightById implements RequestHandler<ApiGatewayRequest, ApiGatewayProxyResponse> {
 
-	public Object handleRequest(ApiGatewayRequest request, Context context) {
+	public ApiGatewayProxyResponse handleRequest(ApiGatewayRequest request, Context context) {
 		Flight flight = new Flight();
 		Connection connection = null;
 		LambdaLogger logger = context.getLogger();
@@ -33,32 +33,33 @@ public class GetFlightById implements RequestHandler<ApiGatewayRequest, Object> 
 			pstmt = connection.prepareStatement("SELECT * FROM Airport WHERE Airport.airportCode = ?");
 			pstmt.setString(1, rs.getString("sourceAirport"));
 			ResultSet rs2 = pstmt.executeQuery();
-			if (rs2.next()) {
-				Airport sourceAirport = new Airport();
-				sourceAirport.setCode(rs2.getString("airportCode"));
-				sourceAirport.setName(rs2.getString("airportName"));
-				sourceAirport.setLocation(rs2.getString("airportLocation"));
-				flight.setSourceAirport(sourceAirport);
-			}
+			rs2.next();
+			Airport sourceAirport = new Airport();
+			sourceAirport.setCode(rs2.getString("airportCode"));
+			sourceAirport.setName(rs2.getString("airportName"));
+			sourceAirport.setLocation(rs2.getString("airportLocation"));
+			flight.setSourceAirport(sourceAirport);
 			pstmt = connection.prepareStatement("SELECT * FROM Airport WHERE Airport.airportCode = ?");
 			pstmt.setString(1, rs.getString("destinationAirport"));
 			rs2 = pstmt.executeQuery();
-			if (rs2.next()) {
-				Airport destinationAirport = new Airport();
-				destinationAirport.setCode(rs2.getString("airportCode"));
-				destinationAirport.setName(rs2.getString("airportName"));
-				destinationAirport.setLocation(rs2.getString("airportLocation"));
-				flight.setDestinationAirport(destinationAirport);
-			}
+			rs2.next();
+			Airport destinationAirport = new Airport();
+			destinationAirport.setCode(rs2.getString("airportCode"));
+			destinationAirport.setName(rs2.getString("airportName"));
+			destinationAirport.setLocation(rs2.getString("airportLocation"));
+			flight.setDestinationAirport(destinationAirport);
 			flight.setDepartureDate(rs.getDate("departureDate").toLocalDate());
 			flight.setDepartureTime(rs.getTime("departureTime").toLocalTime());
 			flight.setArrivalDate(rs.getDate("arrivalDate").toLocalDate());
 			flight.setArrivalTime(rs.getTime("arrivalTime").toLocalTime());
 			flight.setSeatsAvailable(rs.getInt("seatsAvailable"));
 			flight.setCost(rs.getDouble("cost"));
-		} catch (ClassNotFoundException | NullPointerException | NumberFormatException | SQLException e) {
+		} catch (NullPointerException | NumberFormatException | SQLException e) {
 			logger.log(e.getMessage());
 			return new ApiGatewayProxyResponse(400, null, null);
+		} catch (ClassNotFoundException e) {
+			logger.log(e.getMessage());
+			return new ApiGatewayProxyResponse(500, null, null);
 		}
 		return new ApiGatewayProxyResponse(200, null, new Gson().toJson(flight));
 	}
