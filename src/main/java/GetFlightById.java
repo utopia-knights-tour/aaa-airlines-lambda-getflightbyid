@@ -53,7 +53,7 @@ public class GetFlightById implements RequestHandler<ApiGatewayRequest, ApiGatew
 			flight.setArrivalDate(rs.getDate("arrivalDate").toLocalDate());
 			flight.setArrivalTime(rs.getTime("arrivalTime").toLocalTime());
 			flight.setSeatsAvailable(rs.getInt("seatsAvailable"));
-			flight.setCost(rs.getDouble("cost"));
+			flight.setCost(rs.getBigDecimal("cost"));
 		} catch (NullPointerException | NumberFormatException | SQLException e) {
 			logger.log(e.getMessage());
 			return new ApiGatewayProxyResponse(400, null, null);
