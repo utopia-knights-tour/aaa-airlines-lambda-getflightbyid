@@ -22,6 +22,9 @@ public class GetFlightById implements RequestHandler<ApiGatewayRequest, ApiGatew
 		Connection connection = null;
 		LambdaLogger logger = context.getLogger();
 		try {
+			if (request.getPathParameters() == null || request.getPathParameters().get("flightId") == null) {
+				return new ApiGatewayProxyResponse(400, null, null);
+			}
 			connection = ConnectUtil.getInstance().getConnection();
 			PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM Flight WHERE Flight.flightId = ?");
 			pstmt.setLong(1, Long.parseLong(request.getPathParameters().get("flightId")));
@@ -54,7 +57,7 @@ public class GetFlightById implements RequestHandler<ApiGatewayRequest, ApiGatew
 			flight.setArrivalTime(rs.getTime("arrivalTime").toLocalTime());
 			flight.setSeatsAvailable(rs.getInt("seatsAvailable"));
 			flight.setCost(rs.getBigDecimal("cost"));
-		} catch (NullPointerException | NumberFormatException | SQLException e) {
+		} catch (NumberFormatException | SQLException e) {
 			logger.log(e.getMessage());
 			return new ApiGatewayProxyResponse(400, null, null);
 		} catch (ClassNotFoundException e) {
